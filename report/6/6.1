@@ -1,0 +1,75 @@
+μ : TT → T
+η : 1 → T
+
+μはhaskellではjoinとして定義されている．
+Maybeに対してのjoinを定義する．
+join' :: Maybe (Maybe a) -> Maybe a
+join' Nothing         = Nothing
+join' (Just Nothing)  = Nothing
+join' (Just (Just x)) = Just x
+
+ηはhaskellではreturnとして定義されている．
+Maybeに対してのreturnを定義する．
+return' :: a -> Maybe a
+return' x = Just x
+
+自然変換μ
+                 μ(a)
+            TT(a)  -------> T(a)
+            |                |
+       TT(f)|                |T(f)
+            |                |
+            v     μ(b)      v
+            TT(b)---------->T(b)
+
+*Main> (join'  . fmap (fmap (*2))) (Just (Just 2))
+Just 4
+
+*Main> (fmap (*2).join') (Just (Just 2))
+Just 4
+
+自然変換η
+                  η(a)
+            a ------------> T(a)
+            |                |
+           f|                |T(f)
+            |                |
+            v     η(b)      v
+            b ------------->T(b)
+
+*Main> (fmap (*2). return') 2
+Just 4
+
+*Main> (return'.(*2)) 2
+Just 4
+
+よって，自然変換であることがわかった．
+
+
+モナド則を満たしていることを調べる．
+1)μ○Tη = 1_T = μ○ηT
+2)μ○μT  = μ○Tμ
+
+1)について
+*Main> :t join' . fmap return'
+join' . fmap return' :: Maybe b -> Maybe b
+*Main> (join' . fmap return') (Just 3)
+Just 3
+
+*Main> :t join' . return'
+join' . return' :: Maybe b -> Maybe b
+*Main> (join' . return') (Just 3)
+Just 3
+
+2)について
+*Main> :t join' . fmap join'
+join' . fmap join' :: Monad m => m (m (m b)) -> m b
+
+*Main> :t join' . join'
+join' . join' :: Monad m => m (m (m b)) -> m b
+
+よって，モナド則を満たしていることがわかった．
+
+
+Maybeは計算の途中でNothingが現れた場合，その後の計算結果はすべてNothingになる．
+よって，Maybeは失敗するかもしれない計算を表している．

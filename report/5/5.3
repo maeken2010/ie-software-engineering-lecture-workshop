@@ -1,0 +1,161 @@
+#Nodes が Functor であることを確認する
+
+確認用のtreeを定義しておく
+tree = Node 2 (Node 3 (Leaf 4) (Leaf 5)) (Node 6 (Node 7 (Leaf 8) (Leaf 9)) (Leaf 10))
+
+idがidに写ること
+*Main> fmap id tree
+Node 2 (Node 3 (Leaf 4) (Leaf 5)) (Node 6 (Node 7 (Leaf 8) (Leaf 9)) (Leaf 10))
+
+分配法則が成り立つこと
+*Main> fmap ((*10).(+1)) tree
+Node 30 (Node 40 (Leaf 50) (Leaf 60)) (Node 70 (Node 80 (Leaf 90) (Leaf 100)) (Leaf 110))
+*Main> (fmap (*10) . fmap (+1)) tree
+Node 30 (Node 40 (Leaf 50) (Leaf 60)) (Node 70 (Node 80 (Leaf 90) (Leaf 100)) (Leaf 110))
+
+
+#flatten が自然変換であることを確認する
+
+可換図を考える．
+                 flatten(a)
+       Nodes(a) ------------> List(a)
+       |                        |
+ Nodes.fmap(f)               Nodes.fmap(f)
+       |                        |
+       v          flatten(b)    v
+       Nodes(b) ------------->List(b)
+
+つまり，
+fmap f (flatten x) = flatten (fmap f x)
+
+実際に実行して確かめる．
+*Main> fmap show (flatten tree)
+["4","3","5","2","8","7","9","6","10"]
+*Main>  flatten (fmap show tree)
+["4","3","5","2","8","7","9","6","10"]
+
+よって，flattenが自然変換であることが確かめられた．
+
+#1->T
+ηの例として
+eta x = Leaf x
+を考える．可換図は以下の通り
+
+          eta(a)
+    a ------------> Nodes(a)
+    |                |
+   f|                |Nodes.fmap(f)
+    |                |
+    v     eta(b)      v
+    b -------------> Nodes(b)
+
+つまり，
+eta (f x) = fmap f (eta x)
+
+*Main> eta (show 2)
+Leaf "2"
+*Main> fmap show (eta 2)
+Leaf "2"
+
+
+#TT
+
+確認用のtreeNNを定義しておく
+treeNN = Node (Node 9 (Leaf 2) (Leaf 3)) (Leaf (Node 7 (Leaf 8) (Leaf 4)))  (Leaf (Node 10 (Leaf 3) (Leaf 7)))
+
+Nodes (Nodes) a の fmap を定義しておく
+fmapNN :: (a -> b) -> Nodes (Nodes a) -> Nodes (Nodes b)
+fmapNN f (Leaf a) = Leaf (fmap f a)
+fmapNN f (Node a b c) = Node (fmap f a) (fmapNN f b) (fmapNN f c)
+
+idがidに写ること
+*Main> fmapNN id treeNN
+Node (Node 9 (Leaf 2) (Leaf 3)) (Leaf (Node 7 (Leaf 8) (Leaf 4))) (Leaf (Node 10 (Leaf 3) (Leaf 7)))
+
+分配法則が成り立つこと
+*Main> fmapNN ((*10).(+1)) treeNN
+Node (Node 100 (Leaf 30) (Leaf 40)) (Leaf (Node 80 (Leaf 90) (Leaf 50))) (Leaf (Node 110 (Leaf 40) (Leaf 80)))
+*Main> (fmapNN (*10) . fmapNN (+1)) treeNN
+Node (Node 100 (Leaf 30) (Leaf 40)) (Leaf (Node 80 (Leaf 90) (Leaf 50))) (Leaf (Node 110 (Leaf 40) (Leaf 80)))
+
+#ηT
+
+etaNodesの型を見る．
+*Main> :t etaNodes
+etaNodes :: a -> Nodes a
+
+                 etaNodes(a)
+        Nodes(a) ------------> Nodes(Nodes(a))
+        |                          |
+ Nodes.fmap(f)              Nodes.fmap.fmap(f)
+        |                          |
+        v         etaNodes(b)      v
+        Nodes(b) -------------> Nodes(Nodes(b))
+
+つまり，
+etaNodes (fmap f x) = fmapNN f (etaNodes x)
+
+*Main> fmapNN show (etaNodes tree)
+Leaf (Node "2" (Node "3" (Leaf "4") (Leaf "5")) (Node "6" (Node "7" (Leaf "8") (Leaf "9")) (Leaf "10")))
+*Main> etaNodes (fmap show tree)
+Leaf (Node "2" (Node "3" (Leaf "4") (Leaf "5")) (Node "6" (Node "7" (Leaf "8") (Leaf "9")) (Leaf "10")))
+
+#Tη
+nodesEtaの型を見る
+*Main> :t nodesEta
+nodesEta :: Functor f => f a -> f (Nodes a)
+
+                 nodesEta(a)
+        Nodes(a) ------------> Nodes(Nodes(a))
+        |                          |
+ Nodes.fmap(f)              Nodes.fmap.fmap(f)
+        |                          |
+        v         nodesEta(b)      v
+        Nodes(b) -------------> Nodes(Nodes(b))
+
+つまり，
+nodesEta (fmap f x) = fmapNN f (nodesEta x)
+
+nodesEta :: Functor f => f a -> f (Nodes a)
+*Main> nodesEta (fmap show tree)
+Node (Leaf "2") (Node (Leaf "3") (Leaf (Leaf "4")) (Leaf (Leaf "5"))) (Node (Leaf "6") (Node (Leaf "7") (Leaf (Leaf "8")) (Leaf (Leaf "9"))) (Leaf (Leaf "10")))
+*Main> fmapNN show (nodesEta  tree)
+Node (Leaf "2") (Node (Leaf "3") (Leaf (Leaf "4")) (Leaf (Leaf "5"))) (Node (Leaf "6") (Node (Leaf "7") (Leaf (Leaf "8")) (Leaf (Leaf "9"))) (Leaf (Leaf "10")))
+
+#μ
+List の List を、平らな List にする関数を定義しておく
+muList :: [[t]] -> [t]
+muList [] = []
+muList (x:xs) = x ++ muList xs
+
+ListのListのfmapを定義しておく
+fmapMu :: (a -> b) -> [[a]] -> [[b]]
+fmapMu f x = fmap (fmap f) x
+
+                  muList(a)
+   List(List(a)) ------------> List(a)
+        |                          |
+ List.fmap.fmap(f)              List.fmap(f)
+        |                          |
+        v         muList(b)        v
+  List(List(b)) -------------> List(b)
+
+つまり，
+fmap f (muList x) = muList (fmapMu f x)
+
+*Main> fmap show (muList listNN)
+["1","2","3","4","5"]
+*Main> muList (fmapMu show listNN)
+["1","2","3","4","5"]
+
+μ○Tμ と μ○μT
+はそれぞれ
+muList . fmap muList と muList . muList
+を表している．
+
+*Main> :t muList . fmap muList
+muList . fmap muList :: [[[t]]] -> [t]
+*Main> :t muList . muList
+muList . muList :: [[[t]]] -> [t]
+
+それぞれ同じ型(ListのListのListをListにする)を表している．

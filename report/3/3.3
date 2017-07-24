@@ -1,0 +1,25 @@
+
+証明図を作って，証明で行った操作に対応するhaskellの操作を適用させればよい
+ghciで同じように定義してたしかめよう
+
+(1)  A -> A
+
+Prelude> :t \a -> a
+\a -> a :: r -> r
+
+
+(2)  A -> (B -> A)
+
+Prelude> :t \a -> (\b -> a)
+\a -> (\b -> a) :: r1 -> r -> r1
+
+
+(3)  (A ∧ (A -> B)) -> B
+
+Prelude> :t \f -> (snd f)  (fst f)
+\f -> (snd f)  (fst f) :: (a, a -> r) -> r
+
+(4)  B -> (B ∧ (A -> B))
+
+Prelude> :t \b -> ((\a->b),b)
+\b -> ((\a->b),b) :: t -> (t1 -> t, t)

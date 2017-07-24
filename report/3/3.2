@@ -1,0 +1,18 @@
+1.
+(\x -> (snd x,fst x))  (1,2)
+をghciで実行して結果を確かめる
+
+2.
+ghciで型を見ようとするとErrorになる
+:t  (\x -> (snd x,fst x))  ((\x -> t 3 ),2)
+<interactive>:1:32: error: Variable not in scope: t :: Integer -> t
+
+tが無いので，引数として与えてやれば良い
+\t -> (\x -> (snd x,fst x))  ((\x -> t 3 ),2)
+
+式として正しくなったので型を見ることができる．
+Prelude> :t \t -> (\x -> (snd x,fst x))  ((\x -> t 3 ),2)
+\t -> (\x -> (snd x,fst x))  ((\x -> t 3 ),2)
+  :: (Num b, Num a) => (a -> t1) -> (b, t -> t1)
+
+実行しようとするとErrorになるが，これは関数をprintする方法が定義されて無い的な内容なので大丈夫

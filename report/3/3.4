@@ -1,0 +1,25 @@
+SumはHaskellにおけるEitherに対応する
+∨1I はLeft
+∨2I はRightに対応
+∨E  は以下の関数に対応する
+
+elim :: (a -> c) -> (b -> c) -> (Either a b) -> c
+elim f g (Left x) = f x
+elim f g (Right x) = g x
+
+(1)
+*Main> :t \a -> Left a
+\a -> Left a :: a -> Either a b
+
+(2)
+*Main> :t \a -> Right a
+\a -> Right a :: b -> Either a b
+
+(3)
+*Main> :t \f -> elim (\a -> a) (\a -> a) f
+\f -> elim (\a -> a) (\a -> a) f :: Either c c -> c
+
+(4)
+*Main> :t \f -> elim (\g -> (\a -> Left (g a))) (\h -> (\a -> Right (h a)))  f
+\f -> elim (\g -> (\a -> Left (g a))) (\h -> (\a -> Right (h a)))  f
+  :: Either (t -> a) (t -> b) -> t -> Either a b
