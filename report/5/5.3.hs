@@ -5,6 +5,9 @@ instance Functor Nodes where
   fmap f (Leaf a) = (Leaf (f a))
   fmap f (Node a left right) = Node (f a) (fmap f left) (fmap f right)
 
+flatten n = case n of
+        Node v s t ->  (flatten s)++[v]++(flatten t)
+        Leaf v ->  [v]
 tree = Node 2 (Node 3 (Leaf 4) (Leaf 5)) (Node 6 (Node 7 (Leaf 8) (Leaf 9)) (Leaf 10))
 treeNN = Node (Node 9 (Leaf 2) (Leaf 3)) (Leaf (Node 7 (Leaf 8) (Leaf 4)))  (Leaf (Node 10 (Leaf 3) (Leaf 7)))
 
