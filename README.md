@@ -30,7 +30,7 @@
 このrepositoryに課題の解答例と説明があるのでcloneしてghciで読み込みましょう
 
 ```
-$ git clone https://github.com/maeken2010/software-engineering-lecture-workshop.git
+$ git clone https://github.com/maeken2010/ie-software-engineering-lecture-workshop.git
 $ cd software-engineering-lecture-workshop
 $ ghci
 Prelude> :l report/1/1.1.hs
