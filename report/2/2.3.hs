@@ -12,5 +12,4 @@ f3 :: t -> t -> t
 f3 x y = x
 
 f4 :: ( t -> t ) -> t
-f4 f = f(f4(\x -> x))
-
+f4 f = f $ f4 (\x -> x)
